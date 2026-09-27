@@ -20,12 +20,12 @@ on:
           - AIROHA-AN7583
           - IPQ60XX-WIFI-YES
           - IPQ60XX-WIFI-NO
-          - IPQ807X-WIFI-YES
-          - IPQ807X-WIFI-NO
-          - MEDIATEK-WIFI-YES
-          - MEDIATEK-WIFI-NO
-          - ROCKCHIP
-          - X86
+          # - IPQ807X-WIFI-YES
+          #- IPQ807X-WIFI-NO
+          # - MEDIATEK-WIFI-YES
+          # - MEDIATEK-WIFI-NO
+          # - ROCKCHIP
+          # - X86
           - TEST
 
       SOURCE:
