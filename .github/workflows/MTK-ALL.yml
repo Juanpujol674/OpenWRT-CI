@@ -30,6 +30,7 @@ permissions: write-all
 #CI任务
 jobs:
   config:
+    if: ${{ vars.ENABLE_ALL_PLATFORMS == 'true' }}
     name: ${{matrix.CONFIG}}
     strategy:
       fail-fast: false
