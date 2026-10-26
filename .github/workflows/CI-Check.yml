@@ -1,0 +1,25 @@
+name: Check CI configuration
+
+on:
+  pull_request:
+    paths:
+      - '.github/**'
+      - 'Config/**'
+      - 'Scripts/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check Bash syntax
+        run: |
+          for script in Scripts/*.sh .github/scripts/*.sh; do
+            bash -n "$script"
+          done
+      - name: Check platform policy and component switches
+        run: python3 .github/tests/test_extras.py

@@ -59,6 +59,10 @@ env:
   WRT_SOURCE: ${{inputs.WRT_SOURCE}}
   WRT_PACKAGE: ${{inputs.WRT_PACKAGE}}
   WRT_TEST: ${{inputs.WRT_TEST}}
+  # Repository variables: ONU UI defaults on, optional packages default off.
+  WRT_ONU_APP: ${{ vars.AIROHA_ONU_APP != 'false' }}
+  WRT_ONU_DEBUG: ${{ vars.AIROHA_ONU_DEBUG == 'true' }}
+  WRT_ONU_STATUS: ${{ vars.AIROHA_ONU_STATUS == 'true' }}
 
 jobs:
   core:
@@ -178,6 +182,7 @@ jobs:
 
           $GITHUB_WORKSPACE/Scripts/Packages.sh
           $GITHUB_WORKSPACE/Scripts/Handles.sh
+          bash "$GITHUB_WORKSPACE/Scripts/Extras.sh" packages
 
       - name: Custom Settings
         run: |
@@ -190,10 +195,13 @@ jobs:
           fi
 
           $GITHUB_WORKSPACE/Scripts/Settings.sh
+          bash "$GITHUB_WORKSPACE/Scripts/Extras.sh" config
 
           bash "$GITHUB_WORKSPACE/.github/scripts/prepare-build-host.sh"
 
-          make defconfig -j$(nproc) && make clean -j$(nproc)
+          make defconfig -j$(nproc)
+          bash "$GITHUB_WORKSPACE/Scripts/Extras.sh" verify
+          make clean -j$(nproc)
 
       - name: Prepare Rust Toolchain
         if: ${{ !inputs.WRT_TEST }}

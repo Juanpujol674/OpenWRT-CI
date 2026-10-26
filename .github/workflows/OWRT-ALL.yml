@@ -35,7 +35,7 @@ jobs:
       fail-fast: false
       #max-parallel: 3
       matrix:
-        CONFIG: [AIROHA, ROCKCHIP, X86]
+        CONFIG: ${{ fromJSON(vars.ENABLE_ALL_PLATFORMS == 'true' && '["AIROHA","ROCKCHIP","X86"]' || '["AIROHA"]') }}
         SOURCE: [VIKINGYFY/immortalwrt]
         BRANCH: [owrt]
 
