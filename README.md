@@ -50,6 +50,9 @@ AIROHA 从 [OpenWrt_ONU_CONFIG](https://github.com/naoki66/OpenWrt_ONU_CONFIG)
 固定提交 `3cb13560459f1d51136dac662baa1f399028b2b4` 引入 ONU 软件包。
 `luci-app-onu` 强制依赖 `airoha-ponctl` 和 `airoha-pond`，主插件开启时这两个后端必须一起安装；
 诊断工具和状态卡片分别由上述开关控制。关闭主插件可以用于兼容性排查。
+主插件开启时，自动排除旧版 `luci-app-pon`、`luci-app-iptv` 及其中文翻译，
+并移除 AIROHA 设备默认包中的对应条目，避免与 ONU 包内的同名文件发生打包冲突。
+关闭主插件时不修改旧版插件的选择或设备默认包。
 ONU 软件包只在 AIROHA 配置下启用，需要源码提供 `kmod-airoha-xpon` 等依赖。
 
 组件策略在 `PRIVATE.txt`、手动 `PACKAGE` 调整之后应用，确保不会被覆盖；

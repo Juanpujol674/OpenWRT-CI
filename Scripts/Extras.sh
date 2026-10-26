@@ -46,6 +46,14 @@ configure() {
     done < "$ROOT/Config/COMMON.txt"
 
     if [[ "${WRT_CONFIG:-}" == AIROHA ]]; then
+        if onu_enabled; then
+            # ONU incorporates the old PON/IPTV UI and ships the same helpers.
+            # Device defaults can reinstall those packages despite .config=n.
+            "${PYTHON3:-python3}" "$ROOT/Scripts/prepare-onu.py"
+            for symbol in luci-app-pon luci-app-iptv luci-i18n-pon-zh-cn luci-i18n-iptv-zh-cn; do
+                set_config "CONFIG_PACKAGE_$symbol" n
+            done
+        fi
         # luci-app-onu requires both Rust backends; they are not optional extras.
         value=n; if onu_enabled; then value=y; fi
         set_config CONFIG_PACKAGE_luci-app-onu "$value"
@@ -75,6 +83,14 @@ verify() {
         fi
     done < "$ROOT/Config/COMMON.txt"
     if [[ "${WRT_CONFIG:-}" == AIROHA ]]; then
+        if onu_enabled; then
+            for symbol in luci-app-pon luci-app-iptv luci-i18n-pon-zh-cn luci-i18n-iptv-zh-cn; do
+                if grep -qxF "CONFIG_PACKAGE_$symbol=y" .config || grep -qxF "CONFIG_PACKAGE_$symbol=m" .config; then
+                    echo "::error::Legacy package conflicts with luci-app-onu: $symbol"
+                    failed=1
+                fi
+            done
+        fi
         local entry
         for entry in "luci-app-onu:WRT_ONU_APP" "airoha-ponctl:WRT_ONU_APP" "airoha-pond:WRT_ONU_APP" "airoha-pon-debug:WRT_ONU_DEBUG" "luci-app-pon-status:WRT_ONU_STATUS"; do
             symbol=CONFIG_PACKAGE_${entry%%:*}

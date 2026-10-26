@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import re
 import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -40,7 +41,7 @@ class ExtrasTests(unittest.TestCase):
         self.cwd = Path(self.temp.name)
         self.config = self.cwd / ".config"
         self.config.write_text("CONFIG_KEEP_ME=y\n", encoding="utf-8")
-        self.env = dict(os.environ, GITHUB_WORKSPACE=ROOT.as_posix())
+        self.env = dict(os.environ, GITHUB_WORKSPACE=ROOT.as_posix(), PYTHON3=Path(sys.executable).as_posix())
 
     def run_script(self, mode, **env):
         result = subprocess.run(
@@ -98,6 +99,51 @@ class ExtrasTests(unittest.TestCase):
                 self.assertIn("::error::", result.stdout)
         self.config.write_text(original + "CONFIG_PACKAGE_luci-app-openclash=y\n", encoding="utf-8")
         self.assertNotEqual(self.run_script("verify", WRT_CONFIG="AIROHA").returncode, 0)
+
+    def test_onu_excludes_conflicting_device_defaults_only_when_enabled(self):
+        target = self.cwd / "target/linux/airoha/image/an7581.mk"
+        target.parent.mkdir(parents=True)
+        original = (
+            "DEVICE_PACKAGES := kmod-airoha-xpon airoha-ponctl airoha-pond "
+            "luci-app-pon luci-i18n-pon-zh-cn \\\n"
+            "  luci-app-iptv luci-i18n-iptv-zh-cn luci-app-pon-status\n"
+            "DEVICE_PACKAGES += -luci-app-pon -luci-i18n-pon-zh-cn\n"
+        )
+        unrelated = self.cwd / "target/linux/qualcommax/image/ipq50xx.mk"
+        unrelated.parent.mkdir(parents=True)
+        unrelated.write_text(original, encoding="utf-8")
+        for enabled in ("true", "false"):
+            with self.subTest(enabled=enabled):
+                target.write_text(original, encoding="utf-8")
+                cache = self.cwd / "tmp/info/.targetinfo-airoha"
+                cache.parent.mkdir(parents=True, exist_ok=True)
+                cache.write_text("stale defaults", encoding="utf-8")
+                self.config.write_text("CONFIG_PACKAGE_luci-app-pon=y\nCONFIG_PACKAGE_luci-app-iptv=y\n", encoding="utf-8")
+                env = dict(WRT_CONFIG="AIROHA", WRT_ONU_APP=enabled)
+                self.assert_success(self.run_script("config", **env))
+                self.assert_success(self.run_script("verify", **env))
+                self.assertEqual(unrelated.read_text(encoding="utf-8"), original)
+                updated = target.read_text(encoding="utf-8")
+                if enabled == "false":
+                    self.assertEqual(updated, original)
+                    self.assertTrue(cache.exists())
+                    self.assertIn("CONFIG_PACKAGE_luci-app-pon=y", self.config.read_text(encoding="utf-8"))
+                    continue
+                self.assertNotIn(" luci-app-pon ", updated)
+                self.assertNotIn(" luci-app-iptv ", updated)
+                self.assertNotIn(" luci-i18n-pon-zh-cn ", updated)
+                self.assertNotIn(" luci-i18n-iptv-zh-cn ", updated)
+                self.assertIn("-luci-app-pon -luci-i18n-pon-zh-cn", updated)
+                self.assertIn("kmod-airoha-xpon airoha-ponctl airoha-pond", updated)
+                self.assertIn("luci-app-pon-status", updated)
+                self.assertFalse(cache.exists())
+                self.assert_success(self.run_script("config", **env))
+                self.assertEqual(target.read_text(encoding="utf-8"), updated)
+                with self.config.open("a", encoding="utf-8") as f:
+                    f.write("CONFIG_PACKAGE_luci-app-pon=y\n")
+                result = self.run_script("verify", **env)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("Legacy package conflicts", result.stdout)
 
 
 if __name__ == "__main__":
