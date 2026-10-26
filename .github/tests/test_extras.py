@@ -89,8 +89,8 @@ class ExtrasTests(unittest.TestCase):
     def test_verify_catches_dropped_and_reenabled_options(self):
         self.assert_success(self.run_script("config", WRT_CONFIG="AIROHA"))
         original = self.config.read_text(encoding="utf-8")
-        for missing in ("CONFIG_PACKAGE_honk=y", "CONFIG_PACKAGE_comgt-ncm=y",
-                        "CONFIG_KERNEL_DEBUG_INFO_BTF=y", "CONFIG_PACKAGE_airoha-pond=y"):
+        for missing in ("CONFIG_PACKAGE_luci-app-nikki=y", "CONFIG_PACKAGE_comgt-ncm=y",
+                        "CONFIG_PACKAGE_kmod-usb-net-cdc-ncm=y", "CONFIG_PACKAGE_airoha-pond=y"):
             with self.subTest(missing=missing):
                 self.config.write_text(original.replace(missing, ""), encoding="utf-8")
                 result = self.run_script("verify", WRT_CONFIG="AIROHA")

@@ -39,11 +39,8 @@ https://github.com/VIKINGYFY/packages.git
 所有平台，包括手动选择的 `TEST`，统一加载 `Config/COMMON.txt`：
 
 - 安装 Nikki；关闭 OpenClash 和 Momo。
-- 安装 [openwrt-honk](https://github.com/kenzok8/openwrt-honk) 的 `honk` 和 `luci-app-honk`。
-  `openwrt-honk` 是仓库名，不存在名为 `CONFIG_PACKAGE_openwrt-honk` 的上游包选项。
-  本仓库固定源码提交和 `source-40164262544` 归档，并提供上游 SHA256 与 provenance，
-  避免默认 `staging` 下载地址失效。Honk 需要支持 BTF 的 Linux 6.12+ 内核；
-  不会自动启动代理或配置订阅。
+- 不集成 Honk：不下载其源码或归档，并显式关闭 `honk` 和 `luci-app-honk`。
+  内核调试信息与 BTF 使用源码原有策略，不再为 Honk 强制调整。
 - 补齐华为 5G 通信壳的 ECM / NCM / RNDIS USB 网卡、串口、模式切换、NCM 协议组件。
   壳子的 USB 工作模式需与接口设置匹配：ECM/RNDIS 通常对 USB 网卡建立 DHCP 客户端，
   NCM 设备按实际控制端口和 APN 配置 NCM；不自动改写 WAN 或防火墙。

@@ -5,7 +5,6 @@ set -euo pipefail
 
 ROOT=${GITHUB_WORKSPACE:?GITHUB_WORKSPACE is required}
 ONU_REV=3cb13560459f1d51136dac662baa1f399028b2b4
-HONK_REV=24dd6085980bd40e2fa081aa105fb7e46f7d9a78
 
 enabled() { [[ "${!1:-false}" == true ]]; }
 onu_enabled() { [[ "${WRT_CONFIG:-}" == AIROHA && "${WRT_ONU_APP:-true}" != false ]]; }
@@ -18,17 +17,8 @@ clone_pinned() {
 }
 
 packages() {
-    # Reuse the selected upstream's package locations when they already exist.
     # Remove only exact package directories/symlinks, not similarly named apps.
     local name
-    for name in honk luci-app-honk; do
-        find ./feeds ./package/feeds -name "$name" -prune -exec rm -rf {} +
-    done
-    clone_pinned kenzok8/openwrt-honk "$HONK_REV" ./package/openwrt-honk
-    cp "$ROOT/Config/honk/generated-stage.mk" ./package/openwrt-honk/honk/
-    cp "$ROOT/Config/honk/generated-provenance.json" ./package/openwrt-honk/honk/
-    cp "$ROOT/Config/honk/generated-doona-stage.mk" ./package/openwrt-honk/luci-app-honk/
-
     if [[ "${WRT_CONFIG:-}" == AIROHA ]] && { onu_enabled || enabled WRT_ONU_DEBUG || enabled WRT_ONU_STATUS; }; then
         for name in luci-app-onu airoha-ponctl airoha-pond airoha-pon-daemons airoha-pon-debug luci-app-pon-status; do
             find ./feeds ./package/feeds -name "$name" -prune -exec rm -rf {} +
