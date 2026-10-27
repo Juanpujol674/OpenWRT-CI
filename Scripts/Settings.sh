@@ -15,8 +15,12 @@ WIFI_UC="./package/network/config/wifi-scripts/files/lib/wifi/mac80211.uc"
 if [ -f "$WIFI_UC" ]; then
 	#修改WIFI名称
 	sed -i "s/ssid='.*'/ssid='$WRT_SSID'/g" $WIFI_UC
-	#修改WIFI密码
-	sed -i "s/key='.*'/key='$WRT_WORD'/g" $WIFI_UC
+	# 空密码使用开放网络；同时清空 key，避免保留上游默认密码。
+	if [ -z "${WRT_WORD:-}" ]; then
+		sed -i "s/encryption='.*'/encryption='none'/g; s/key='.*'/key=''/g" "$WIFI_UC"
+	else
+		sed -i "s/encryption='.*'/encryption='psk2+ccmp'/g; s/key='.*'/key='$WRT_WORD'/g" "$WIFI_UC"
+	fi
 fi
 
 CFG_FILE="./package/base-files/files/bin/config_generate"

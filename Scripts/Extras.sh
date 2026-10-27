@@ -5,9 +5,11 @@ set -euo pipefail
 
 ROOT=${GITHUB_WORKSPACE:?GITHUB_WORKSPACE is required}
 ONU_REV=3cb13560459f1d51136dac662baa1f399028b2b4
+TAILSCALE_LUCI_REV=534eb3f3acba24dac4e6fee9fa33049b004ef121
 
 enabled() { [[ "${!1:-false}" == true ]]; }
-onu_enabled() { [[ "${WRT_CONFIG:-}" == AIROHA && "${WRT_ONU_APP:-true}" != false ]]; }
+is_airoha() { [[ "${WRT_CONFIG:-}" == AIROHA || "${WRT_CONFIG:-}" == AIROHA-AN758* ]]; }
+onu_enabled() { is_airoha && [[ "${WRT_ONU_APP:-true}" != false ]]; }
 
 clone_pinned() {
     local repo=$1 rev=$2 dest=$3
@@ -19,7 +21,12 @@ clone_pinned() {
 packages() {
     # Remove only exact package directories/symlinks, not similarly named apps.
     local name
-    if [[ "${WRT_CONFIG:-}" == AIROHA ]] && { onu_enabled || enabled WRT_ONU_DEBUG || enabled WRT_ONU_STATUS; }; then
+    find ./feeds ./package/feeds -name luci-app-tailscale -prune -exec rm -rf {} +
+    clone_pinned asvow/luci-app-tailscale "$TAILSCALE_LUCI_REV" ./package/luci-app-tailscale
+    # The requested UI owns these files; do not install a second copy from
+    # the daemon package (as documented by the UI upstream).
+    sed -i '/\/etc\/init\.d\/tailscale/d; /\/etc\/config\/tailscale/d' ./feeds/packages/net/tailscale/Makefile
+    if is_airoha && { onu_enabled || enabled WRT_ONU_DEBUG || enabled WRT_ONU_STATUS; }; then
         for name in luci-app-onu airoha-ponctl airoha-pond airoha-pon-daemons airoha-pon-debug luci-app-pon-status; do
             find ./feeds ./package/feeds -name "$name" -prune -exec rm -rf {} +
         done
@@ -45,7 +52,7 @@ configure() {
         set_config "$symbol" "$value"
     done < "$ROOT/Config/COMMON.txt"
 
-    if [[ "${WRT_CONFIG:-}" == AIROHA ]]; then
+    if is_airoha; then
         if onu_enabled; then
             # ONU incorporates the old PON/IPTV UI and ships the same helpers.
             # Device defaults can reinstall those packages despite .config=n.
@@ -82,7 +89,7 @@ verify() {
             failed=1
         fi
     done < "$ROOT/Config/COMMON.txt"
-    if [[ "${WRT_CONFIG:-}" == AIROHA ]]; then
+    if is_airoha; then
         if onu_enabled; then
             for symbol in luci-app-pon luci-app-iptv luci-i18n-pon-zh-cn luci-i18n-iptv-zh-cn; do
                 if grep -qxF "CONFIG_PACKAGE_$symbol=y" .config || grep -qxF "CONFIG_PACKAGE_$symbol=m" .config; then
