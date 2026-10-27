@@ -10,11 +10,12 @@ on:
   workflow_dispatch:
     inputs:
       CONFIG:
-        default: 'AIROHA'
+        default: 'AIROHA-AN7581'
         required: true
         type: choice
         options:
-          - AIROHA
+          - AIROHA-AN7581
+          - AIROHA-AN7583
           - IPQ53XX
           - IPQ60XX-WIFI-NO
           - IPQ60XX-WIFI-YES
@@ -53,7 +54,7 @@ permissions: write-all
 jobs:
   config:
     # TEST is manual-only; other disabled platforms need the repository switch.
-    if: ${{ vars.ENABLE_ALL_PLATFORMS == 'true' || contains(fromJSON('["AIROHA","IPQ53XX","IPQ60XX-WIFI-NO","IPQ60XX-WIFI-YES","TEST"]'), inputs.CONFIG) }}
+    if: ${{ vars.ENABLE_ALL_PLATFORMS == 'true' || contains(fromJSON('["AIROHA-AN7581","AIROHA-AN7583","IPQ53XX","IPQ60XX-WIFI-NO","IPQ60XX-WIFI-YES","TEST"]'), inputs.CONFIG) }}
     name: ${{inputs.CONFIG}}
     #调用公用编译核心WRT-CORE.yml
     uses: ./.github/workflows/WRT-CORE.yml
@@ -67,9 +68,9 @@ jobs:
       #默认WIFI名称
       WRT_SSID: OWRT
       #默认WIFI密码
-      WRT_WORD: 12345678
+      WRT_WORD: ''
       #默认地址
-      WRT_IP: 192.168.10.1
+      WRT_IP: 192.168.1.1
       #默认密码，仅作提示，修改无用
       WRT_PW: 无
       #源码链接

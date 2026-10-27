@@ -18,7 +18,10 @@ https://github.com/VIKINGYFY/packages.git
 
 ## 本仓库的编译范围与组件开关
 
-默认云编译仅运行 **AIROHA、IPQ53XX、IPQ60XX-WIFI-NO、IPQ60XX-WIFI-YES**。
+默认云编译运行 **AIROHA-AN7581、AIROHA-AN7583、IPQ53XX、IPQ60XX-WIFI-NO、IPQ60XX-WIFI-YES**。
+AIROHA 两个子平台由新的 `AIROHA-ALL` 工作流编译；`OWRT-ALL` 现在仅包含 ROCKCHIP/X86，默认跳过。
+所有平台默认 LAN 地址为 **192.168.1.1**；Wi-Fi 名称为 `OWRT`，**无密码（开放网络）**。
+这些是首次启动/恢复出厂默认值，保留旧配置升级时仍会使用设备现有的 LAN/Wi-Fi 设置。
 其余平台配置和工作流保留，通过开关恢复。`TEST` 是一个单独的测试机型配置，
 不是正常编译的前置条件，不参加自动编译；需要时可从 `WRT-TEST` 手动选择。
 `WRT-TEST` 的 `TEST=true` 则表示只生成配置、不编译固件，与平台名 `TEST` 含义不同。
@@ -32,13 +35,17 @@ https://github.com/VIKINGYFY/packages.git
 | `AIROHA_ONU_DEBUG` | `false` | 设为 `true` 增加 `airoha-pon-debug` 诊断工具 |
 | `AIROHA_ONU_STATUS` | `false` | 设为 `true` 增加 `luci-app-pon-status` 状态卡片 |
 
-变量值请使用小写 `true` / `false`。关闭全平台开关时，`MTK-ALL` 会跳过；
+变量值请使用小写 `true` / `false`。关闭全平台开关时，`MTK-ALL` 和 `OWRT-ALL` 会跳过；
 `WRT-TEST` 的选择列表仍保留历史平台，但选择未启用的平台会跳过任务。
 开关默认值已写入工作流，不必先创建变量才能编译。
 
 所有平台，包括手动选择的 `TEST`，统一加载 `Config/COMMON.txt`：
 
-- 安装 Nikki；关闭 OpenClash 和 Momo。
+- 安装 Nikki 和 Tailscale 管理界面；关闭 OpenClash 和 Momo。
+  `luci-app-tailscale` 来自 `asvow/luci-app-tailscale` 固定提交
+  `534eb3f3acba24dac4e6fee9fa33049b004ef121`，搭配软件源中的 `tailscale`。
+  按该插件上游说明移除后端包重复提供的 init/config 文件，避免文件归属冲突；
+  默认不启用 Tailscale，刷机后在 LuCI 中配置并登录。
 - 不集成 Honk：不下载其源码或归档，并显式关闭 `honk` 和 `luci-app-honk`。
   内核调试信息与 BTF 使用源码原有策略，不再为 Honk 强制调整。
 - 补齐华为 5G 通信壳的 ECM / NCM / RNDIS USB 网卡、串口、模式切换、NCM 协议组件。
@@ -53,12 +60,20 @@ AIROHA 从 [OpenWrt_ONU_CONFIG](https://github.com/naoki66/OpenWrt_ONU_CONFIG)
 主插件开启时，自动排除旧版 `luci-app-pon`、`luci-app-iptv` 及其中文翻译，
 并移除 AIROHA 设备默认包中的对应条目，避免与 ONU 包内的同名文件发生打包冲突。
 关闭主插件时不修改旧版插件的选择或设备默认包。
-ONU 软件包只在 AIROHA 配置下启用，需要源码提供 `kmod-airoha-xpon` 等依赖。
+ONU 软件包在 AIROHA-AN7581、AIROHA-AN7583 配置下启用，需要源码提供 `kmod-airoha-xpon` 等依赖。
 
 组件策略在 `PRIVATE.txt`、手动 `PACKAGE` 调整之后应用，确保不会被覆盖；
 要改变上述统一策略请修改 `Config/COMMON.txt` 或 ONU 变量。
 工作流在 `make defconfig` 后核对实际选项，依赖缺失或选项被静默移除时直接报错，
 避免发布缺少所需组件的固件。首次验证可手动运行 `WRT-TEST`，选择平台并保留 `TEST=true`。
+
+## 同步上游
+
+本次已合并上游 `VIKINGYFY/OpenWRT-CI` 的 `4dd9325`，包括 AN7583 配置、独立 AIROHA 工作流和构建准备脚本调整，保留本仓库的组件、平台开关与 ONU 冲突修复。
+Fork 与上游各有提交时，可将上游更新合并到本仓库，不需要把自己的定制提交给上游。
+后续在 GitHub Desktop 的 Repository → Repository settings → Fork behavior 保持 **For my own purposes**，
+创建 PR 时目标应为 `Juanpujol674/OpenWRT-CI:main`。若 GitHub 的 Sync fork 无法自动处理冲突，
+应在本地合并上游并解决冲突，再推送到自己的仓库，避免使用会丢弃定制的强制覆盖。
 
 官方版：
 
