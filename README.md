@@ -67,6 +67,8 @@ ONU 软件包在 AIROHA-AN7581、AIROHA-AN7583 配置下启用，需要源码提
 AN7581 的全机型构建显式编译 `kmod-sound-soc-an7581-wm8960` 为独立包（`m`），
 供上游 Multi-EVB 开发板的 `DEVICE_PACKAGES` 安装；不因此将它加入所有机型的公共根文件系统。
 配置检查会确认该包在 `defconfig` 后仍为 `m` 或 `y`，缺失时提前报错。
+同时显式启用 `audio-support=y`：上游 `kmod-sound-core` 将其作为非自动选择的依赖，
+仅选择音频驱动会被 `defconfig` 删除。此依赖也在私有配置之后强制应用并检查。
 
 组件策略在 `PRIVATE.txt`、手动 `PACKAGE` 调整之后应用，确保不会被覆盖；
 要改变上述统一策略请修改 `Config/COMMON.txt` 或 ONU 变量。

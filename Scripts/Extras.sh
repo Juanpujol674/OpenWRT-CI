@@ -53,6 +53,9 @@ configure() {
     done < "$ROOT/Config/COMMON.txt"
 
     if [[ "${WRT_CONFIG:-}" == AIROHA-AN7581 ]]; then
+        # sound-core depends on this feature gate without selecting it.
+        # Selecting the codec alone is silently discarded by defconfig.
+        set_config CONFIG_PACKAGE_audio-support y
         # Build the Multi-EVB audio dependency without adding it to every
         # device rootfs. Preserve an explicit built-in selection if provided.
         if ! grep -qxF 'CONFIG_PACKAGE_kmod-sound-soc-an7581-wm8960=y' .config; then
@@ -97,10 +100,15 @@ verify() {
             failed=1
         fi
     done < "$ROOT/Config/COMMON.txt"
-    if [[ "${WRT_CONFIG:-}" == AIROHA-AN7581 ]] &&
-        ! grep -qxE 'CONFIG_PACKAGE_kmod-sound-soc-an7581-wm8960=[my]' .config; then
-        echo '::error::AN7581 Multi-EVB requires kmod-sound-soc-an7581-wm8960; it was dropped by defconfig'
-        failed=1
+    if [[ "${WRT_CONFIG:-}" == AIROHA-AN7581 ]]; then
+        if ! grep -qxF 'CONFIG_PACKAGE_audio-support=y' .config; then
+            echo '::error::AN7581 audio-support must be enabled; sound-core and the Multi-EVB codec depend on it'
+            failed=1
+        fi
+        if ! grep -qxE 'CONFIG_PACKAGE_kmod-sound-soc-an7581-wm8960=[my]' .config; then
+            echo '::error::AN7581 Multi-EVB requires kmod-sound-soc-an7581-wm8960; it was dropped by defconfig'
+            failed=1
+        fi
     fi
     if is_airoha; then
         if onu_enabled; then
