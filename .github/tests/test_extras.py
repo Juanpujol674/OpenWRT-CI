@@ -165,14 +165,20 @@ class ExtrasTests(unittest.TestCase):
 
     def test_an7581_device_audio_dependency_and_missing_package_check(self):
         symbol = "CONFIG_PACKAGE_kmod-sound-soc-an7581-wm8960"
+        gate = "CONFIG_PACKAGE_audio-support"
         for onu in ("true", "false"):
             with self.subTest(onu=onu):
-                self.config.write_text("CONFIG_KEEP_ME=y\n", encoding="utf-8")
+                self.config.write_text("CONFIG_KEEP_ME=y\n# " + gate + " is not set\n", encoding="utf-8")
                 env = dict(WRT_CONFIG="AIROHA-AN7581", WRT_ONU_APP=onu)
                 self.assert_success(self.run_script("config", **env))
                 self.assertIn(symbol + "=m", self.config.read_text(encoding="utf-8"))
+                self.assertIn(gate + "=y", self.config.read_text(encoding="utf-8"))
                 self.assert_success(self.run_script("verify", **env))
                 original = self.config.read_text(encoding="utf-8")
+                self.config.write_text(original.replace(gate + "=y", "# " + gate + " is not set"), encoding="utf-8")
+                result = self.run_script("verify", **env)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("audio-support must be enabled", result.stdout)
                 self.config.write_text(original.replace(symbol + "=m", "# " + symbol + " is not set"), encoding="utf-8")
                 result = self.run_script("verify", **env)
                 self.assertNotEqual(result.returncode, 0)
@@ -183,6 +189,7 @@ class ExtrasTests(unittest.TestCase):
         self.config.write_text("CONFIG_KEEP_ME=y\n", encoding="utf-8")
         self.assert_success(self.run_script("config", WRT_CONFIG="AIROHA-AN7583"))
         self.assertNotIn(symbol, self.config.read_text(encoding="utf-8"))
+        self.assertNotIn(gate, self.config.read_text(encoding="utf-8"))
 
 
 class NetworkDefaultsTests(unittest.TestCase):
