@@ -2,7 +2,7 @@
 """Exclude legacy UI defaults when the replacement ONU UI is enabled.
 
 Run from the OpenWrt source directory, before make defconfig.
-Keep negative package exclusions and unrelated PON drivers/backends intact.
+Remove obsolete UI additions and removals; keep driver/backend exclusions intact.
 """
 from pathlib import Path
 import re
@@ -10,7 +10,7 @@ import re
 
 def prepare(root):
     legacy = re.compile(
-        r"(?<![\w-])(?:luci-app-(?:pon|iptv)|luci-i18n-(?:pon|iptv)-[\w-]+)(?![\w-])"
+        r"(?<![\w-])-?(?:luci-app-(?:pon|iptv)|luci-i18n-(?:pon|iptv)-[\w-]+)(?![\w-])"
     )
     changed = False
     for path in (root / "target/linux/airoha").rglob("*"):
