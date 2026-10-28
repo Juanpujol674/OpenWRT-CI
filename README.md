@@ -59,8 +59,14 @@ AIROHA 从 [OpenWrt_ONU_CONFIG](https://github.com/naoki66/OpenWrt_ONU_CONFIG)
 诊断工具和状态卡片分别由上述开关控制。关闭主插件可以用于兼容性排查。
 主插件开启时，自动排除旧版 `luci-app-pon`、`luci-app-iptv` 及其中文翻译，
 并移除 AIROHA 设备默认包中的对应条目，避免与 ONU 包内的同名文件发生打包冲突。
+这些旧插件的负向条目（例如 `-luci-app-pon`）也会清除，避免镜像阶段要求 APK 删除不存在的包；
+其它驱动、后端的排除条目保留。
 关闭主插件时不修改旧版插件的选择或设备默认包。
 ONU 软件包在 AIROHA-AN7581、AIROHA-AN7583 配置下启用，需要源码提供 `kmod-airoha-xpon` 等依赖。
+
+AN7581 的全机型构建显式编译 `kmod-sound-soc-an7581-wm8960` 为独立包（`m`），
+供上游 Multi-EVB 开发板的 `DEVICE_PACKAGES` 安装；不因此将它加入所有机型的公共根文件系统。
+配置检查会确认该包在 `defconfig` 后仍为 `m` 或 `y`，缺失时提前报错。
 
 组件策略在 `PRIVATE.txt`、手动 `PACKAGE` 调整之后应用，确保不会被覆盖；
 要改变上述统一策略请修改 `Config/COMMON.txt` 或 ONU 变量。

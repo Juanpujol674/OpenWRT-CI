@@ -52,6 +52,14 @@ configure() {
         set_config "$symbol" "$value"
     done < "$ROOT/Config/COMMON.txt"
 
+    if [[ "${WRT_CONFIG:-}" == AIROHA-AN7581 ]]; then
+        # Build the Multi-EVB audio dependency without adding it to every
+        # device rootfs. Preserve an explicit built-in selection if provided.
+        if ! grep -qxF 'CONFIG_PACKAGE_kmod-sound-soc-an7581-wm8960=y' .config; then
+            set_config CONFIG_PACKAGE_kmod-sound-soc-an7581-wm8960 m
+        fi
+    fi
+
     if is_airoha; then
         if onu_enabled; then
             # ONU incorporates the old PON/IPTV UI and ships the same helpers.
@@ -89,6 +97,11 @@ verify() {
             failed=1
         fi
     done < "$ROOT/Config/COMMON.txt"
+    if [[ "${WRT_CONFIG:-}" == AIROHA-AN7581 ]] &&
+        ! grep -qxE 'CONFIG_PACKAGE_kmod-sound-soc-an7581-wm8960=[my]' .config; then
+        echo '::error::AN7581 Multi-EVB requires kmod-sound-soc-an7581-wm8960; it was dropped by defconfig'
+        failed=1
+    fi
     if is_airoha; then
         if onu_enabled; then
             for symbol in luci-app-pon luci-app-iptv luci-i18n-pon-zh-cn luci-i18n-iptv-zh-cn; do

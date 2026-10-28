@@ -123,7 +123,7 @@ class ExtrasTests(unittest.TestCase):
             "DEVICE_PACKAGES := kmod-airoha-xpon airoha-ponctl airoha-pond "
             "luci-app-pon luci-i18n-pon-zh-cn \\\n"
             "  luci-app-iptv luci-i18n-iptv-zh-cn luci-app-pon-status\n"
-            "DEVICE_PACKAGES += -luci-app-pon -luci-i18n-pon-zh-cn\n"
+            "DEVICE_PACKAGES += -kmod-airoha-xpon -airoha-ponctl -airoha-pond -luci-app-pon -luci-i18n-pon-zh-cn\n"
         )
         unrelated = self.cwd / "target/linux/qualcommax/image/ipq50xx.mk"
         unrelated.parent.mkdir(parents=True)
@@ -149,7 +149,9 @@ class ExtrasTests(unittest.TestCase):
                 self.assertNotIn(" luci-app-iptv ", updated)
                 self.assertNotIn(" luci-i18n-pon-zh-cn ", updated)
                 self.assertNotIn(" luci-i18n-iptv-zh-cn ", updated)
-                self.assertIn("-luci-app-pon -luci-i18n-pon-zh-cn", updated)
+                self.assertNotIn("-luci-app-pon", updated)
+                self.assertNotIn("-luci-i18n-pon-zh-cn", updated)
+                self.assertIn("-kmod-airoha-xpon -airoha-ponctl -airoha-pond", updated)
                 self.assertIn("kmod-airoha-xpon airoha-ponctl airoha-pond", updated)
                 self.assertIn("luci-app-pon-status", updated)
                 self.assertFalse(cache.exists())
@@ -160,6 +162,27 @@ class ExtrasTests(unittest.TestCase):
                 result = self.run_script("verify", **env)
                 self.assertNotEqual(result.returncode, 0)
                 self.assertIn("Legacy package conflicts", result.stdout)
+
+    def test_an7581_device_audio_dependency_and_missing_package_check(self):
+        symbol = "CONFIG_PACKAGE_kmod-sound-soc-an7581-wm8960"
+        for onu in ("true", "false"):
+            with self.subTest(onu=onu):
+                self.config.write_text("CONFIG_KEEP_ME=y\n", encoding="utf-8")
+                env = dict(WRT_CONFIG="AIROHA-AN7581", WRT_ONU_APP=onu)
+                self.assert_success(self.run_script("config", **env))
+                self.assertIn(symbol + "=m", self.config.read_text(encoding="utf-8"))
+                self.assert_success(self.run_script("verify", **env))
+                original = self.config.read_text(encoding="utf-8")
+                self.config.write_text(original.replace(symbol + "=m", "# " + symbol + " is not set"), encoding="utf-8")
+                result = self.run_script("verify", **env)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("Multi-EVB requires", result.stdout)
+        self.config.write_text(symbol + "=y\n", encoding="utf-8")
+        self.assert_success(self.run_script("config", WRT_CONFIG="AIROHA-AN7581"))
+        self.assertIn(symbol + "=y", self.config.read_text(encoding="utf-8"))
+        self.config.write_text("CONFIG_KEEP_ME=y\n", encoding="utf-8")
+        self.assert_success(self.run_script("config", WRT_CONFIG="AIROHA-AN7583"))
+        self.assertNotIn(symbol, self.config.read_text(encoding="utf-8"))
 
 
 class NetworkDefaultsTests(unittest.TestCase):
