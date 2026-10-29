@@ -205,6 +205,16 @@ jobs:
           bash "$GITHUB_WORKSPACE/Scripts/Extras.sh" verify
           make clean -j$(nproc)
 
+      - name: Preinstall Nikki zashboard
+        if: ${{ !inputs.WRT_TEST }}
+        run: |
+          cd ./wrt/
+
+          curl --fail --location --retry 3 --connect-timeout 30 --max-time 300 \
+            'https://github.com/Zephyruso/zashboard/releases/latest/download/dist.zip' \
+            --output "$RUNNER_TEMP/zashboard-dist.zip"
+          python3 "$GITHUB_WORKSPACE/Scripts/prepare-zashboard.py" "$RUNNER_TEMP/zashboard-dist.zip"
+
       - name: Prepare Rust Toolchain
         if: ${{ !inputs.WRT_TEST }}
         run: |
