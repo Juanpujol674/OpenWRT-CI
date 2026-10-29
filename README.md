@@ -48,6 +48,12 @@ AIROHA 两个子平台由新的 `AIROHA-ALL` 工作流编译；`OWRT-ALL` 现在
   默认不启用 Tailscale，刷机后在 LuCI 中配置并登录。
 - 不集成 Honk：不下载其源码或归档，并显式关闭 `honk` 和 `luci-app-honk`。
   内核调试信息与 BTF 使用源码原有策略，不再为 Honk 强制调整。
+- 正式固件编译时下载 [zashboard 最新版 dist.zip](https://github.com/Zephyruso/zashboard/releases/latest/download/dist.zip)，
+  去掉归档的 `dist/` 层，通过 OpenWrt 的 `files/` 覆盖目录预置到
+  `/etc/nikki/run/ui/zashboard/`，其中直接包含 `index.html` 和 `assets/`。
+  Nikki 默认配置使用 `ui_path=ui`、`ui_name=zashboard`，更新地址也使用同一个 `dist.zip`。
+  下载失败或压缩包结构异常时明确停止编译；仅输出配置的 `TEST` 模式跳过下载。
+  新默认值适用于首次启动；保留配置升级的设备需在 Nikki 的外部控制设置中确认面板路径和名称。
 - 补齐华为 5G 通信壳的 ECM / NCM / RNDIS USB 网卡、串口、模式切换、NCM 协议组件。
   壳子的 USB 工作模式需与接口设置匹配：ECM/RNDIS 通常对 USB 网卡建立 DHCP 客户端，
   NCM 设备按实际控制端口和 APN 配置 NCM；不自动改写 WAN 或防火墙。

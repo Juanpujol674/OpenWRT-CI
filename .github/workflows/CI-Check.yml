@@ -23,3 +23,5 @@ jobs:
           done
       - name: Check platform policy and component switches
         run: python3 .github/tests/test_extras.py
+      - name: Check zashboard preinstallation
+        run: python3 .github/tests/test_zashboard.py
