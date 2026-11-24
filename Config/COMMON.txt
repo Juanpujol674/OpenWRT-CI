@@ -20,3 +20,26 @@ CONFIG_PACKAGE_usb-modeswitch=y
 CONFIG_PACKAGE_usbutils=y
 CONFIG_PACKAGE_comgt-ncm=y
 CONFIG_PACKAGE_luci-proto-ncm=y
+
+# 可选组件精简：n 不编入固件；恢复某类功能时将该组全部改为 y。
+# HomeProxy / sing-box（保留 Nikki / mihomo）
+CONFIG_PACKAGE_luci-app-homeproxy=n
+CONFIG_PACKAGE_luci-i18n-homeproxy-zh-cn=n
+CONFIG_PACKAGE_sing-box=n
+# Samba4 文件共享及独立的内核 SMB 服务
+CONFIG_PACKAGE_luci-app-samba4=n
+CONFIG_PACKAGE_luci-i18n-samba4-zh-cn=n
+CONFIG_PACKAGE_samba4-server=n
+CONFIG_PACKAGE_samba4-libs=n
+CONFIG_PACKAGE_wsdd2=n
+CONFIG_PACKAGE_kmod-fs-ksmbd=n
+# 苹果 USB 网络（不影响华为 5G 通信壳）
+CONFIG_PACKAGE_kmod-usb-net-ipheth=n
+CONFIG_PACKAGE_libimobiledevice=n
+CONFIG_PACKAGE_libimobiledevice-glue=n
+CONFIG_PACKAGE_libusbmuxd=n
+CONFIG_PACKAGE_usbmuxd=n
+# 跑分 / 测速
+CONFIG_PACKAGE_coremark=n
+CONFIG_PACKAGE_iperf3=n
+CONFIG_PACKAGE_libiperf3=n
