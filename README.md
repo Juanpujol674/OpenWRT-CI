@@ -39,6 +39,11 @@ AIROHA 两个子平台由新的 `AIROHA-ALL` 工作流编译；`OWRT-ALL` 现在
 `WRT-TEST` 的选择列表仍保留历史平台，但选择未启用的平台会跳过任务。
 开关默认值已写入工作流，不必先创建变量才能编译。
 
+HomeProxy/sing-box、Samba4/内核 SMB 服务、苹果 USB 网络及 coremark/iperf3 默认不编入固件。
+开关集中在 `Config/COMMON.txt` 末尾，按功能分组；`n` 表示不编译，恢复某组时将该组配置全部改为 `y`。
+此文件在通用配置、私有配置及手动插件参数之后应用，`defconfig` 后还会检查，避免被依赖重新选中。
+这些是固件编译开关，修改并合并后需重新编译、刷入固件才生效；LuCI 中停用服务不会缩小固件。
+
 所有平台，包括手动选择的 `TEST`，统一加载 `Config/COMMON.txt`：
 
 - 安装 Nikki 和 Tailscale 管理界面；关闭 OpenClash 和 Momo。
